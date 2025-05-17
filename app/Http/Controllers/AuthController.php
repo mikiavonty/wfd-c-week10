@@ -20,7 +20,7 @@ class AuthController extends Controller
         Log::debug($validated);
         if (Auth::attempt($validated)) {
             $user = Auth::user();
-            $token = $user->createToken($user->name." token");
+            $token = $user->createToken($user->name.now());
             return response()->json([
                 "ok" => true,
                 "user" => $user,
@@ -46,7 +46,7 @@ class AuthController extends Controller
             "email" => $validated["email"],
             "password" => Hash::make($validated["password"]),
         ]);
-        $token = $user->createToken($validated["name"]." token");
+        $token = $user->createToken($validated["name"].now());
 
         return response()->json([
             "ok" => true,

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class PostController extends Controller
 {
@@ -23,14 +24,20 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             "title" => "required|string|max:255",
             "author" => "required|string|max:255",
             "excerpt" => "required|min:50",
             "text" => "required|min:150"
         ]);
 
-        $post = Post::create($validated);
+        if ($validator->fails()) {
+            return response()->json([
+                "status" => $validator->errors()
+            ], 406);
+        }
+
+        $post = Post::create($validator->safe()->all());
         return response()->json([
             "ok" => true,
             "post" => $post
@@ -53,17 +60,23 @@ class PostController extends Controller
      */
     public function update(Request $request, Post $post)
     {
-        $validated = $request->validate([
+        $validator = Validator::make($request->all(), [
             "title" => "string|max:255",
             "author" => "string|max:255",
             "excerpt" => "min:50",
             "text" => "min:150"
         ]);
 
-        $post->update($validated);
+        if ($validator->fails()) {
+            return response()->json([
+                "status" => $validator->errors()
+            ], 406);
+        }
+
+        $post->update($validator->safe()->all());
         return response()->json([
             "ok" => true,
-            "post" => $validated
+            "post" => $post
         ], 200);
     }
 
