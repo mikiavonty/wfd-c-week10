@@ -15,7 +15,7 @@ jobs:
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh # Set correct permissions for the .ssh directory itself
           
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/id_rsa
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
 
           echo "Verifying private key format and passphrase..."
