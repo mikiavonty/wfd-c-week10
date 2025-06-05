@@ -1,4 +1,4 @@
-name: Auto Deploy Website on Push
+name: Auto Deploy Website on Manual Trigger
 
 on:
   workflow_dispatch:
