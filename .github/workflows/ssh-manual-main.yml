@@ -1,0 +1,39 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ssh-deploy:
+    name: SSH Deploy to cPanel
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup SSH Key
+      run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+    - name: 📁 Buat arsip ZIP
+      run: |
+          zip -r laravel-deploy.zip . -x "*.git*" 
+    - name: 📤 Deploy via SCP
+      run: |
+          scp -P ${{ secrets.SSH_PORT }} -r -v laravel-deploy.zip ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.TARGET_DIR }}
+    - name: 📂 Installing
+      run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "
+            cd ${{ secrets.TARGET_DIR }} &&
+            unzip -o laravel-deploy.zip &&
+            rm laravel-deploy.zip &&
+            composer install &&
+            cp .env.example .env
+            sed -i "s/^DB_HOST=.*/DB_HOST=${{ secrets.DB_HOST }}/" .env
+            sed -i "s/^DB_DATABASE=.*/DB_DATABASE=${{ secrets.DB_DATABASE }}/" .env
+            sed -i "s/^DB_USERNAME=.*/DB_USERNAME=${{ secrets.DB_USERNAME }}/" .env
+            sed -i "s/^DB_PASSWORD=.*/DB_PASSWORD=${{ secrets.DB_PASSWORD }}/" .env &&
+            php artisan key:generate && 
+            php artisan migrate 
+            "
