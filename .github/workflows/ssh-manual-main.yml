@@ -13,9 +13,30 @@ jobs:
     - name: Setup SSH Key
       run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 700 ~/.ssh # Set correct permissions for the .ssh directory itself
+          
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
+
+          echo "Verifying private key format and passphrase..."
+          ssh-keygen -y -f ~/.ssh/id_rsa > /dev/null 2>&1
+          if [ $? -ne 0 ]; then
+            echo "Error: The private key might be corrupted or in an unexpected format after being read from the secret."
+            echo "Contents of id_rsa (first few lines for inspection, no sensitive data):"
+            head -n 5 ~/.ssh/id_rsa
+            exit 1
+          else
+            echo "Private key appears to be valid OpenSSH format and not encrypted."
+          fi
+  
           ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts # Set correct permissions for known_hosts
+  
+          echo "SSH key setup complete."
+      env:
+          # Define environment variables from secrets if they are not directly used in 'run' command
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
     - name: 📁 Buat arsip ZIP
       run: |
           zip -r laravel-deploy.zip . -x "*.git*" 
