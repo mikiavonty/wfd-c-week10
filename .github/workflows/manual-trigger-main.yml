@@ -39,6 +39,8 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
+        protocol: ftp 
+        port: 21
         exclude: | # Addind this part ensures node_modules will be deployed for the app to run
           **/.git*
           **/.git*/**
